@@ -4,7 +4,8 @@ import (
 	"testing"
 
 	user "github.com/guiaramos/umarket/cmd/user/domain"
-	apptest "github.com/guiaramos/umarket/pkg/testing"
+	"github.com/stretchr/testify/assert"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -56,9 +57,9 @@ func TestPassword_IsValid(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			err := Validate(test.input)
 			if test.err == nil {
-				apptest.AssertNoError(t, err)
+				assert.NoError(t, err)
 			} else {
-				apptest.AssertError(t, err, test.err)
+				assert.ErrorIs(t, err, test.err)
 			}
 		})
 	}
@@ -69,27 +70,21 @@ func TestPassword_HashAndSalt(t *testing.T) {
 	var pwd user.Password = (user.Password)(pass)
 
 	t.Run("should hash password", func(t *testing.T) {
-		if pwd.String() != pass {
-			t.Fatalf("test password does not match %v and %v", pass, pwd)
-		}
+		assert.Equal(t, pass, pwd.String())
 
 		e := pwd.HashAndSalt(bcrypt.MinCost)
-		apptest.AssertNoError(t, e)
+		assert.NoError(t, e)
 
-		if pwd.String() == pass {
-			t.Fatalf("password must not be same %v and %v", pass, pwd)
-		}
+		assert.NotEqual(t, pwd.String(), pass)
 
 		ok := pwd.ComparePassword(pass)
-		if !ok {
-			t.Fatalf("password must be hash")
-		}
+		assert.True(t, ok)
 	})
 
 	t.Run("should return error if bcrypt fails", func(t *testing.T) {
 		c := 32
 		e := pwd.HashAndSalt(c)
-		apptest.AssertError(t, e, bcrypt.InvalidCostError(c))
+		assert.ErrorIs(t, bcrypt.InvalidCostError(c), e)
 	})
 }
 
@@ -100,16 +95,12 @@ func TestPassword_ComparePassword(t *testing.T) {
 
 	t.Run("should return false if password is not matching", func(t *testing.T) {
 		ok := pwd.ComparePassword("some other password")
-		if ok {
-			t.Fatalf("must return false as password does not match")
-		}
+		assert.False(t, ok)
 	})
 
 	t.Run("should return true if password is matching", func(t *testing.T) {
 		ok := pwd.ComparePassword(pass)
-		if !ok {
-			t.Fatalf("must return true when password is matching")
-		}
+		assert.True(t, ok)
 	})
 }
 
@@ -119,8 +110,6 @@ func TestPassword_String(t *testing.T) {
 
 	t.Run("should return type string", func(t *testing.T) {
 		p := pwd.String()
-		if p != pass {
-			t.Fatalf("password must not be same %v and %v", pass, pwd.String())
-		}
+		assert.Equal(t, pass, p)
 	})
 }
