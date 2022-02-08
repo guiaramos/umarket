@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang-jwt/jwt"
-	auth "github.com/guiaramos/umarket/cmd/auth/domain"
+	auth "github.com/guiaramos/umarket/cmd/auth/domain/session"
 	"github.com/stretchr/testify/assert"
 )
 

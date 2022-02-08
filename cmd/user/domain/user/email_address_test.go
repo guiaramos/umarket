@@ -3,7 +3,7 @@ package domain_test
 import (
 	"testing"
 
-	user "github.com/guiaramos/umarket/cmd/user/domain"
+	user "github.com/guiaramos/umarket/cmd/user/domain/user"
 	"github.com/stretchr/testify/assert"
 )
 
