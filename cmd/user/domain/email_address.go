@@ -1,4 +1,4 @@
-package user
+package domain
 
 import "github.com/asaskevich/govalidator"
 
