@@ -1,7 +1,7 @@
 /*
-package domain holds user domain logic
+package user holds user domain logic
 */
-package domain
+package user
 
 import (
 	"time"
