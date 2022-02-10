@@ -11,11 +11,11 @@ import (
 
 // User aggregate root
 type User struct {
-	ID        string
-	Email     EmailAddress
-	Hash      Password
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string       `json:"id,omitempty" bson:"_id,omitempty"`
+	Email     EmailAddress `json:"email,omitempty" bson:"email"`
+	Hash      Password     `json:"hash,omitempty" bson:"hash"`
+	CreatedAt time.Time    `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
+	UpdatedAt time.Time    `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 }
 
 // New creates an User
@@ -45,6 +45,8 @@ func (u *User) Register(pwd Password) error {
 
 	// Assign hash to user
 	u.Hash = pwd
+	u.CreatedAt = time.Now()
+	u.UpdatedAt = time.Now()
 
 	return nil
 }

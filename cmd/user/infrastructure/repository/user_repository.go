@@ -26,7 +26,7 @@ func NewUserRepository(mongo *mongo.Database) user.Repository {
 
 // NewId generates a new mongodb id
 func (r userRepository) NewId() string {
-	return primitive.NewObjectID().String()
+	return primitive.NewObjectID().Hex()
 }
 
 // InsertOne persist new user to mongodb
@@ -76,8 +76,7 @@ func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, err
 
 	filter := bson.D{{Key: "_id", Value: objectID}}
 
-	err = r.coll.FindOne(ctx, filter).Decode(u)
-	if err != nil {
+	if err = r.coll.FindOne(ctx, filter).Decode(u); err != nil {
 		return u, err
 	}
 

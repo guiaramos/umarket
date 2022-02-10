@@ -1,0 +1,408 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>session: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/guiaramos/umarket/cmd/auth/domain/session/session.go (100.0%)</option>
+				
+				<option value="file1">github.com/guiaramos/umarket/cmd/user/domain/user/email_address.go (100.0%)</option>
+				
+				<option value="file2">github.com/guiaramos/umarket/cmd/user/domain/user/password.go (100.0%)</option>
+				
+				<option value="file3">github.com/guiaramos/umarket/cmd/user/domain/user/user.go (100.0%)</option>
+				
+				<option value="file4">github.com/guiaramos/umarket/cmd/user/infrastructure/repository/user_repository.go (97.4%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package auth
+
+import (
+        "time"
+
+        "github.com/golang-jwt/jwt"
+        auth "github.com/guiaramos/umarket/pkg/auth"
+)
+
+// Session aggregate root.
+type Session struct {
+        UserID string `json:"userId"`
+        jwt.StandardClaims
+        auth auth.Token
+}
+
+// New returns a new Session.
+func NewSession(auth auth.Token) Session <span class="cov8" title="1">{
+        return Session{
+                auth: auth,
+        }
+}</span>
+
+// Generate creates Access Token and assign token info to Session.
+func (s *Session) Generate(userId string, ttlMinutes time.Duration) (string, error) <span class="cov8" title="1">{
+        // calculate the expire time
+        expTime := time.Now().Add(time.Minute * ttlMinutes)
+
+        // Assing Expire date
+        s.StandardClaims = jwt.StandardClaims{
+                ExpiresAt: expTime.Unix(),
+        }
+
+        // sign claim
+        return s.auth.Sign(s)
+}</span>
+
+// GenerateFromToken verify and assign token info to Session.
+func (s *Session) GenerateFromToken(token string) error <span class="cov8" title="1">{
+        // Verify and Assign to Session
+        return s.auth.Verify(token, s)
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package user
+
+import "github.com/asaskevich/govalidator"
+
+// EmailAddress is an email address.
+type EmailAddress string
+
+// IsValid returns error if string is not valid email.
+func (e EmailAddress) IsValid() error <span class="cov8" title="1">{
+        if !govalidator.IsEmail(string(e)) </span><span class="cov8" title="1">{
+                return ErrEmailInvalid
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package user
+
+import (
+        "unicode"
+
+        "golang.org/x/crypto/bcrypt"
+)
+
+// Password is an email address.
+type Password string
+
+// IsValid returns error if string is not valid password.
+func (p Password) IsValid() error <span class="cov8" title="1">{
+        var (
+                hasMinLen  = false
+                hasUpper   = false
+                hasLower   = false
+                hasNumber  = false
+                hasSpecial = false
+        )
+
+        if len(p) &gt;= 7 </span><span class="cov8" title="1">{
+                hasMinLen = true
+        }</span>
+        <span class="cov8" title="1">for _, char := range p </span><span class="cov8" title="1">{
+                switch </span>{
+                case unicode.IsUpper(char):<span class="cov8" title="1">
+                        hasUpper = true</span>
+                case unicode.IsLower(char):<span class="cov8" title="1">
+                        hasLower = true</span>
+                case unicode.IsNumber(char):<span class="cov8" title="1">
+                        hasNumber = true</span>
+                case unicode.IsPunct(char) || unicode.IsSymbol(char):<span class="cov8" title="1">
+                        hasSpecial = true</span>
+                }
+        }
+
+        <span class="cov8" title="1">if hasMinLen &amp;&amp; hasUpper &amp;&amp; hasLower &amp;&amp; hasNumber &amp;&amp; hasSpecial </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">return ErrPasswordInvalid</span>
+}
+
+// HashAndSalt hash and salt the password
+func (p *Password) HashAndSalt(cost int) error <span class="cov8" title="1">{
+        bytePwd := []byte(p.String())
+        hash, err := bcrypt.GenerateFromPassword(bytePwd, cost)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">*p = (Password)(hash)
+
+        return nil</span>
+}
+
+// ComparePassword verifies if password matched with hash
+func (h Password) ComparePassword(pwd string) bool <span class="cov8" title="1">{
+        bytePwd := []byte(pwd)
+        byteHash := []byte(h)
+
+        err := bcrypt.CompareHashAndPassword(byteHash, bytePwd)
+
+        return err == nil
+}</span>
+
+func (p Password) String() string <span class="cov8" title="1">{
+        return string(p)
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">/*
+package user holds user domain logic
+*/
+package user
+
+import (
+        "time"
+
+        "golang.org/x/crypto/bcrypt"
+)
+
+// User aggregate root
+type User struct {
+        ID        string       `json:"id,omitempty" bson:"_id,omitempty"`
+        Email     EmailAddress `json:"email,omitempty" bson:"email"`
+        Hash      Password     `json:"hash,omitempty" bson:"hash"`
+        CreatedAt time.Time    `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
+        UpdatedAt time.Time    `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
+}
+
+// New creates an User
+func New(id string, email EmailAddress) User <span class="cov8" title="1">{
+        return User{
+                ID:    id,
+                Email: email,
+        }
+}</span>
+
+// Register set current user email and hash+salt password
+func (u *User) Register(pwd Password) error <span class="cov8" title="1">{
+        // Check if email is valid
+        e := u.Email.IsValid()
+        if e != nil </span><span class="cov8" title="1">{
+                return e
+        }</span>
+
+        // Check if password is valid
+        <span class="cov8" title="1">e = pwd.IsValid()
+        if e != nil </span><span class="cov8" title="1">{
+                return e
+        }</span>
+
+        // Hash and Salt password
+        <span class="cov8" title="1">pwd.HashAndSalt(bcrypt.MinCost)
+
+        // Assign hash to user
+        u.Hash = pwd
+        u.CreatedAt = time.Now()
+        u.UpdatedAt = time.Now()
+
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package repository
+
+import (
+        "context"
+
+        "github.com/guiaramos/umarket/cmd/user/domain/user"
+        "github.com/guiaramos/umarket/pkg/logger"
+
+        "go.mongodb.org/mongo-driver/bson"
+        "go.mongodb.org/mongo-driver/bson/primitive"
+        "go.mongodb.org/mongo-driver/mongo"
+)
+
+type userRepository struct {
+        coll   *mongo.Collection
+        logger logger.Logger
+}
+
+// NewUserRepository creates new user mongodb repository
+func NewUserRepository(mongo *mongo.Database) user.Repository <span class="cov8" title="1">{
+        coll := mongo.Collection("users")
+        logger := logger.NewLogger("user_repository")
+
+        return &amp;userRepository{coll: coll, logger: logger}
+}</span>
+
+// NewId generates a new mongodb id
+func (r userRepository) NewId() string <span class="cov8" title="1">{
+        return primitive.NewObjectID().Hex()
+}</span>
+
+// InsertOne persist new user to mongodb
+func (r userRepository) InsertOne(ctx context.Context, u *user.User) error <span class="cov8" title="1">{
+        result, err := r.coll.InsertOne(ctx, u)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">r.logger.InfoWithFields("New user created with the following id: ", logger.LoggerFields{"id:": result.InsertedID})
+
+        return nil</span>
+}
+
+// UpdateOne saves current user changes to mongodb
+func (r userRepository) UpdateOne(ctx context.Context, u *user.User) error <span class="cov8" title="1">{
+        id, err := primitive.ObjectIDFromHex(u.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">update := bson.D{{Key: "$set", Value: u}}
+
+        result, err := r.coll.UpdateByID(ctx, id, update)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">r.logger.InfoWithFields("document(s) was/were updated.", logger.LoggerFields{
+                "MatchedCount":  result.MatchedCount,
+                "ModifiedCount": result.ModifiedCount,
+                "UpsertedCount": result.UpsertedCount,
+                "UpsertedID":    result.UpsertedID,
+        })
+
+        return nil</span>
+}
+
+// FindOne searchs for one user from mongodb
+func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, error) <span class="cov8" title="1">{
+        u := &amp;user.User{}
+
+        objectID, err := primitive.ObjectIDFromHex(id)
+        if err != nil </span><span class="cov8" title="1">{
+                return u, err
+        }</span>
+
+        <span class="cov8" title="1">filter := bson.D{{Key: "_id", Value: objectID}}
+
+        if err = r.coll.FindOne(ctx, filter).Decode(u); err != nil </span><span class="cov8" title="1">{
+                return u, err
+        }</span>
+
+        <span class="cov8" title="1">if u.ID != "" </span><span class="cov8" title="1">{
+                r.logger.InfoWithFields("Found a user in the collection with the id: ", logger.LoggerFields{"id": u.ID})
+        }</span> else<span class="cov8" title="1"> {
+                r.logger.InfoWithFields("No users found with the id: ", logger.LoggerFields{"id": u.ID})
+        }</span>
+
+        <span class="cov8" title="1">return u, nil</span>
+}
+
+// FindByEmail searchs for user with passed email
+func (r userRepository) FindByEmail(ctx context.Context, email user.EmailAddress) (*user.User, error) <span class="cov8" title="1">{
+        u := &amp;user.User{}
+
+        filter := bson.D{{Key: "email", Value: email}}
+
+        err := r.coll.FindOne(ctx, filter).Decode(u)
+        if err != nil </span><span class="cov8" title="1">{
+                return u, err
+        }</span>
+
+        <span class="cov8" title="1">if u.Email != "" </span><span class="cov8" title="1">{
+                r.logger.InfoWithFields("Found a user in the collection with the email: ", logger.LoggerFields{"email": u.Email})
+        }</span> else<span class="cov8" title="1"> {
+                r.logger.InfoWithFields("No users found with the email: ", logger.LoggerFields{"email": u.Email})
+        }</span>
+
+        <span class="cov8" title="1">return u, nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
