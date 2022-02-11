@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/guiaramos/umarket/pkg/apperror"
 )
 
 const (
@@ -33,22 +34,27 @@ func init() {
 }
 
 // Sign generates token string
-func (j jwtToken) Sign(claims jwt.Claims) (string, error) {
+func (j jwtToken) Sign(claims jwt.Claims) (string, *apperror.AppError) {
 	// create jwt with claim
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// return the signed string
-	return token.SignedString(signKey)
+	signed, err := token.SignedString(signKey)
+	if err != nil {
+		return "", apperror.NewInternalServerError(err.Error())
+	}
+
+	return signed, nil
 }
 
 // Verify checks if token is valid and assign the claims
-func (j jwtToken) Verify(token string, claims jwt.Claims) error {
+func (j jwtToken) Verify(token string, claims jwt.Claims) *apperror.AppError {
 	decoded, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
 		return verifyKey, nil
 	})
 
 	if err != nil {
-		return err
+		return apperror.NewUnauthorized(err.Error())
 	}
 
 	if !decoded.Valid {

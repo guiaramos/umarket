@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	auth "github.com/guiaramos/umarket/cmd/auth/domain/session"
+	"github.com/guiaramos/umarket/pkg/apperror"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,11 +19,11 @@ type SpyAuthToken struct {
 	verifyWasCalled bool
 }
 
-func (s *SpyAuthToken) Sign(claims jwt.Claims) (string, error) {
+func (s *SpyAuthToken) Sign(claims jwt.Claims) (string, *apperror.AppError) {
 	s.signWasCalled = true
 	return token, nil
 }
-func (s *SpyAuthToken) Verify(token string, claims jwt.Claims) error {
+func (s *SpyAuthToken) Verify(token string, claims jwt.Claims) *apperror.AppError {
 	s.verifyWasCalled = true
 	return nil
 }
@@ -43,7 +44,7 @@ func TestSession_Generate(t *testing.T) {
 
 	t.Run("should assign user and expire to session", func(t *testing.T) {
 		accessToken, err := session.Generate(userId, 5)
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 		assert.Equal(t, accessToken, token)
 	})
 
@@ -51,7 +52,7 @@ func TestSession_Generate(t *testing.T) {
 		accessToken, err := session.Generate(userId, 5)
 
 		assert.True(t, authSpy.signWasCalled)
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 		assert.Equal(t, accessToken, token)
 	})
 

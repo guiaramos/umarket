@@ -3,6 +3,7 @@ package user
 import (
 	"unicode"
 
+	"github.com/guiaramos/umarket/pkg/apperror"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -10,7 +11,7 @@ import (
 type Password string
 
 // IsValid returns error if string is not valid password.
-func (p Password) IsValid() error {
+func (p Password) IsValid() *apperror.AppError {
 	var (
 		hasMinLen  = false
 		hasUpper   = false
@@ -43,11 +44,11 @@ func (p Password) IsValid() error {
 }
 
 // HashAndSalt hash and salt the password
-func (p *Password) HashAndSalt(cost int) error {
+func (p *Password) HashAndSalt(cost int) *apperror.AppError {
 	bytePwd := []byte(p.String())
 	hash, err := bcrypt.GenerateFromPassword(bytePwd, cost)
 	if err != nil {
-		return err
+		return apperror.NewInternalServerError(err.Error())
 	}
 
 	*p = (Password)(hash)

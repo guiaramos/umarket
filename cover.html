@@ -63,7 +63,11 @@
 				
 				<option value="file3">github.com/guiaramos/umarket/cmd/user/domain/user/user.go (100.0%)</option>
 				
-				<option value="file4">github.com/guiaramos/umarket/cmd/user/infrastructure/repository/user_repository.go (97.4%)</option>
+				<option value="file4">github.com/guiaramos/umarket/cmd/user/infrastructure/repository/user_repository.go (100.0%)</option>
+				
+				<option value="file5">github.com/guiaramos/umarket/cmd/user/usecase/create_user_dto.go (100.0%)</option>
+				
+				<option value="file6">github.com/guiaramos/umarket/cmd/user/usecase/create_user_usecase.go (93.3%)</option>
 				
 				</select>
 			</div>
@@ -83,6 +87,7 @@ import (
         "time"
 
         "github.com/golang-jwt/jwt"
+        "github.com/guiaramos/umarket/pkg/apperror"
         auth "github.com/guiaramos/umarket/pkg/auth"
 )
 
@@ -101,7 +106,7 @@ func NewSession(auth auth.Token) Session <span class="cov8" title="1">{
 }</span>
 
 // Generate creates Access Token and assign token info to Session.
-func (s *Session) Generate(userId string, ttlMinutes time.Duration) (string, error) <span class="cov8" title="1">{
+func (s *Session) Generate(userId string, ttlMinutes time.Duration) (string, *apperror.AppError) <span class="cov8" title="1">{
         // calculate the expire time
         expTime := time.Now().Add(time.Minute * ttlMinutes)
 
@@ -115,7 +120,7 @@ func (s *Session) Generate(userId string, ttlMinutes time.Duration) (string, err
 }</span>
 
 // GenerateFromToken verify and assign token info to Session.
-func (s *Session) GenerateFromToken(token string) error <span class="cov8" title="1">{
+func (s *Session) GenerateFromToken(token string) *apperror.AppError <span class="cov8" title="1">{
         // Verify and Assign to Session
         return s.auth.Verify(token, s)
 }</span>
@@ -123,13 +128,16 @@ func (s *Session) GenerateFromToken(token string) error <span class="cov8" title
 		
 		<pre class="file" id="file1" style="display: none">package user
 
-import "github.com/asaskevich/govalidator"
+import (
+        "github.com/asaskevich/govalidator"
+        "github.com/guiaramos/umarket/pkg/apperror"
+)
 
 // EmailAddress is an email address.
 type EmailAddress string
 
 // IsValid returns error if string is not valid email.
-func (e EmailAddress) IsValid() error <span class="cov8" title="1">{
+func (e EmailAddress) IsValid() *apperror.AppError <span class="cov8" title="1">{
         if !govalidator.IsEmail(string(e)) </span><span class="cov8" title="1">{
                 return ErrEmailInvalid
         }</span>
@@ -143,6 +151,7 @@ func (e EmailAddress) IsValid() error <span class="cov8" title="1">{
 import (
         "unicode"
 
+        "github.com/guiaramos/umarket/pkg/apperror"
         "golang.org/x/crypto/bcrypt"
 )
 
@@ -150,7 +159,7 @@ import (
 type Password string
 
 // IsValid returns error if string is not valid password.
-func (p Password) IsValid() error <span class="cov8" title="1">{
+func (p Password) IsValid() *apperror.AppError <span class="cov8" title="1">{
         var (
                 hasMinLen  = false
                 hasUpper   = false
@@ -183,11 +192,11 @@ func (p Password) IsValid() error <span class="cov8" title="1">{
 }
 
 // HashAndSalt hash and salt the password
-func (p *Password) HashAndSalt(cost int) error <span class="cov8" title="1">{
+func (p *Password) HashAndSalt(cost int) *apperror.AppError <span class="cov8" title="1">{
         bytePwd := []byte(p.String())
         hash, err := bcrypt.GenerateFromPassword(bytePwd, cost)
         if err != nil </span><span class="cov8" title="1">{
-                return err
+                return apperror.NewInternalServerError(err.Error())
         }</span>
 
         <span class="cov8" title="1">*p = (Password)(hash)
@@ -218,6 +227,7 @@ package user
 import (
         "time"
 
+        "github.com/guiaramos/umarket/pkg/apperror"
         "golang.org/x/crypto/bcrypt"
 )
 
@@ -239,7 +249,7 @@ func New(id string, email EmailAddress) User <span class="cov8" title="1">{
 }</span>
 
 // Register set current user email and hash+salt password
-func (u *User) Register(pwd Password) error <span class="cov8" title="1">{
+func (u *User) Register(pwd Password) *apperror.AppError <span class="cov8" title="1">{
         // Check if email is valid
         e := u.Email.IsValid()
         if e != nil </span><span class="cov8" title="1">{
@@ -270,6 +280,7 @@ import (
         "context"
 
         "github.com/guiaramos/umarket/cmd/user/domain/user"
+        "github.com/guiaramos/umarket/pkg/apperror"
         "github.com/guiaramos/umarket/pkg/logger"
 
         "go.mongodb.org/mongo-driver/bson"
@@ -296,10 +307,10 @@ func (r userRepository) NewId() string <span class="cov8" title="1">{
 }</span>
 
 // InsertOne persist new user to mongodb
-func (r userRepository) InsertOne(ctx context.Context, u *user.User) error <span class="cov8" title="1">{
+func (r userRepository) InsertOne(ctx context.Context, u *user.User) *apperror.AppError <span class="cov8" title="1">{
         result, err := r.coll.InsertOne(ctx, u)
         if err != nil </span><span class="cov8" title="1">{
-                return err
+                return apperror.NewInternalServerError(err.Error())
         }</span>
 
         <span class="cov8" title="1">r.logger.InfoWithFields("New user created with the following id: ", logger.LoggerFields{"id:": result.InsertedID})
@@ -308,17 +319,17 @@ func (r userRepository) InsertOne(ctx context.Context, u *user.User) error <span
 }
 
 // UpdateOne saves current user changes to mongodb
-func (r userRepository) UpdateOne(ctx context.Context, u *user.User) error <span class="cov8" title="1">{
+func (r userRepository) UpdateOne(ctx context.Context, u *user.User) *apperror.AppError <span class="cov8" title="1">{
         id, err := primitive.ObjectIDFromHex(u.ID)
-        if err != nil </span><span class="cov0" title="0">{
-                return err
+        if err != nil </span><span class="cov8" title="1">{
+                return apperror.NewBadRequest(err.Error())
         }</span>
 
         <span class="cov8" title="1">update := bson.D{{Key: "$set", Value: u}}
 
         result, err := r.coll.UpdateByID(ctx, id, update)
         if err != nil </span><span class="cov8" title="1">{
-                return err
+                return apperror.NewInternalServerError(err.Error())
         }</span>
 
         <span class="cov8" title="1">r.logger.InfoWithFields("document(s) was/were updated.", logger.LoggerFields{
@@ -332,18 +343,18 @@ func (r userRepository) UpdateOne(ctx context.Context, u *user.User) error <span
 }
 
 // FindOne searchs for one user from mongodb
-func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, error) <span class="cov8" title="1">{
+func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, *apperror.AppError) <span class="cov8" title="1">{
         u := &amp;user.User{}
 
         objectID, err := primitive.ObjectIDFromHex(id)
         if err != nil </span><span class="cov8" title="1">{
-                return u, err
+                return u, apperror.NewBadRequest(err.Error())
         }</span>
 
         <span class="cov8" title="1">filter := bson.D{{Key: "_id", Value: objectID}}
 
         if err = r.coll.FindOne(ctx, filter).Decode(u); err != nil </span><span class="cov8" title="1">{
-                return u, err
+                return u, apperror.NewInternalServerError(err.Error())
         }</span>
 
         <span class="cov8" title="1">if u.ID != "" </span><span class="cov8" title="1">{
@@ -356,14 +367,14 @@ func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, err
 }
 
 // FindByEmail searchs for user with passed email
-func (r userRepository) FindByEmail(ctx context.Context, email user.EmailAddress) (*user.User, error) <span class="cov8" title="1">{
+func (r userRepository) FindByEmail(ctx context.Context, email user.EmailAddress) (*user.User, *apperror.AppError) <span class="cov8" title="1">{
         u := &amp;user.User{}
 
         filter := bson.D{{Key: "email", Value: email}}
 
         err := r.coll.FindOne(ctx, filter).Decode(u)
         if err != nil </span><span class="cov8" title="1">{
-                return u, err
+                return u, apperror.NewInternalServerError(err.Error())
         }</span>
 
         <span class="cov8" title="1">if u.Email != "" </span><span class="cov8" title="1">{
@@ -373,6 +384,98 @@ func (r userRepository) FindByEmail(ctx context.Context, email user.EmailAddress
         }</span>
 
         <span class="cov8" title="1">return u, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package usecase
+
+import (
+        "github.com/guiaramos/umarket/cmd/user/domain/user"
+        "github.com/guiaramos/umarket/pkg/apperror"
+)
+
+// CreateUserDTO defines data required for creating an user.
+type CreateUserDTO struct {
+        Email    user.EmailAddress `json:"email,omitempty"`
+        Password user.Password     `json:"password,omitempty"`
+}
+
+// NewCreateUserDTO creates a CreateUserDTO.
+func NewCreateUserDTO(email user.EmailAddress, password user.Password) *CreateUserDTO <span class="cov8" title="1">{
+        return &amp;CreateUserDTO{
+                Email:    email,
+                Password: password,
+        }
+}</span>
+
+// Validate checks if the DTO has valid data
+func (c CreateUserDTO) Validate() (err *apperror.AppError) <span class="cov8" title="1">{
+        if err = c.Email.IsValid(); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if err = c.Password.IsValid(); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package usecase
+
+import (
+        "context"
+
+        "github.com/guiaramos/umarket/cmd/user/domain/user"
+        "github.com/guiaramos/umarket/pkg/apperror"
+        "github.com/guiaramos/umarket/pkg/logger"
+)
+
+// CreateUserUseCase implements the logic for creatring an User.
+type CreateUserUseCase struct {
+        repo   user.Repository
+        logger logger.Logger
+}
+
+// NewCreateUserUseCase creates a new Create User use case.
+func NewCreateUserUseCase(repo user.Repository) CreateUserUseCase <span class="cov8" title="1">{
+        logger := logger.NewLogger("create_user_usecase")
+
+        return CreateUserUseCase{
+                repo:   repo,
+                logger: logger,
+        }
+}</span>
+
+func (u CreateUserUseCase) Execute(ctx context.Context, dto *CreateUserDTO) *apperror.AppError <span class="cov8" title="1">{
+        u.logger.Info("CreateUserUserCase...")
+
+        // Check if email is already in use.
+        existingUser, err := u.repo.FindByEmail(ctx, dto.Email)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if existingUser != nil </span><span class="cov8" title="1">{
+                return ErrEmailAlreadyInUse
+        }</span>
+
+        // Create the new user.
+        <span class="cov8" title="1">id := u.repo.NewId()
+        user := user.New(id, dto.Email)
+
+        // Register the user.
+        if err := user.Register(dto.Password); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        // Persist data.
+        <span class="cov8" title="1">if err := u.repo.InsertOne(ctx, &amp;user); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
 }
 </pre>
 		

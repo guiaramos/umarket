@@ -7,10 +7,10 @@ import (
 
 	"github.com/guiaramos/umarket/cmd/user/domain/user"
 	"github.com/guiaramos/umarket/cmd/user/infrastructure/repository"
+	"github.com/guiaramos/umarket/pkg/apperror"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 )
 
@@ -58,7 +58,7 @@ func TestUserRepository_InsertOne(t *testing.T) {
 
 		err := repo.InsertOne(context.TODO(), u)
 
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 	})
 
 	mt.Run("should return error on mongodb error", func(mt *mtest.T) {
@@ -72,7 +72,7 @@ func TestUserRepository_InsertOne(t *testing.T) {
 		err := repo.InsertOne(context.TODO(), u)
 
 		assert.NotNil(t, err)
-		assert.True(t, mongo.IsDuplicateKeyError(err))
+		assert.True(t, apperror.IsInternalServerError(err))
 	})
 }
 
@@ -102,7 +102,7 @@ func TestUserRepository_UpdateOne(t *testing.T) {
 
 		err := repo.UpdateOne(context.TODO(), u)
 
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 	})
 
 	mt.Run("should return error if id is not valid ObjectID", func(mt *mtest.T) {
@@ -115,7 +115,7 @@ func TestUserRepository_UpdateOne(t *testing.T) {
 
 		err := repo.UpdateOne(context.TODO(), u)
 
-		assert.ErrorIs(t, primitive.ErrInvalidHex, err)
+		assert.True(t, apperror.IsBadRequestError(err))
 	})
 
 	mt.Run("should return error on mongodb error", func(mt *mtest.T) {
@@ -129,7 +129,7 @@ func TestUserRepository_UpdateOne(t *testing.T) {
 		err := repo.UpdateOne(context.TODO(), u)
 
 		assert.NotNil(t, err)
-		assert.True(t, mongo.IsDuplicateKeyError(err))
+		assert.True(t, apperror.IsInternalServerError(err))
 	})
 }
 
@@ -153,7 +153,7 @@ func TestUserRepository_FindOne(t *testing.T) {
 
 		user, err := repo.FindOne(context.TODO(), u.ID)
 
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 		assert.Equal(t, u, user)
 	})
 
@@ -167,7 +167,7 @@ func TestUserRepository_FindOne(t *testing.T) {
 
 		user, err := repo.FindOne(context.TODO(), u.ID)
 
-		assert.ErrorIs(t, primitive.ErrInvalidHex, err)
+		assert.True(t, apperror.IsBadRequestError(err))
 		assert.Empty(t, user)
 	})
 
@@ -203,7 +203,7 @@ func TestUserRepository_FindOne(t *testing.T) {
 
 		user, err := repo.FindOne(context.TODO(), u.ID)
 
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 		assert.Empty(t, user)
 	})
 }
@@ -228,7 +228,7 @@ func TestUserRepository_FindByEmail(t *testing.T) {
 
 		user, err := repo.FindByEmail(context.TODO(), u.Email)
 
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 		assert.Equal(t, u, user)
 	})
 
@@ -264,7 +264,7 @@ func TestUserRepository_FindByEmail(t *testing.T) {
 
 		user, err := repo.FindByEmail(context.TODO(), u.Email)
 
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 		assert.Empty(t, user)
 	})
 }

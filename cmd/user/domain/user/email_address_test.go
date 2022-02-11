@@ -19,7 +19,7 @@ func TestEmailAddress_IsValid(t *testing.T) {
 		var email user.EmailAddress = "gui_aramos@outlook.com"
 		err := email.IsValid()
 
-		assert.NoError(t, err)
+		assert.Nil(t, err)
 	})
 
 }

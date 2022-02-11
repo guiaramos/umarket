@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	user "github.com/guiaramos/umarket/cmd/user/domain/user"
+	"github.com/guiaramos/umarket/pkg/apperror"
 	"github.com/stretchr/testify/assert"
 
 	"golang.org/x/crypto/bcrypt"
@@ -57,7 +58,7 @@ func TestPassword_IsValid(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			err := Validate(test.input)
 			if test.err == nil {
-				assert.NoError(t, err)
+				assert.Nil(t, err)
 			} else {
 				assert.ErrorIs(t, err, test.err)
 			}
@@ -73,7 +74,7 @@ func TestPassword_HashAndSalt(t *testing.T) {
 		assert.Equal(t, pass, pwd.String())
 
 		e := pwd.HashAndSalt(bcrypt.MinCost)
-		assert.NoError(t, e)
+		assert.Nil(t, e)
 
 		assert.NotEqual(t, pwd.String(), pass)
 
@@ -84,7 +85,7 @@ func TestPassword_HashAndSalt(t *testing.T) {
 	t.Run("should return error if bcrypt fails", func(t *testing.T) {
 		c := 32
 		e := pwd.HashAndSalt(c)
-		assert.ErrorIs(t, bcrypt.InvalidCostError(c), e)
+		assert.True(t, apperror.IsInternalServerError(e))
 	})
 }
 

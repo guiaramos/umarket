@@ -6,6 +6,7 @@ package user
 import (
 	"time"
 
+	"github.com/guiaramos/umarket/pkg/apperror"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,7 +28,7 @@ func New(id string, email EmailAddress) User {
 }
 
 // Register set current user email and hash+salt password
-func (u *User) Register(pwd Password) error {
+func (u *User) Register(pwd Password) *apperror.AppError {
 	// Check if email is valid
 	e := u.Email.IsValid()
 	if e != nil {

@@ -34,7 +34,7 @@ func TestUser_Register(t *testing.T) {
 		u := user.New(id, email)
 
 		e := u.Register(pwd)
-		assert.NoError(t, e)
+		assert.Nil(t, e)
 		assert.NotEmpty(t, u.ID)
 		assert.NotEmpty(t, u.Email)
 		assert.NotEmpty(t, u.Hash)

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/guiaramos/umarket/cmd/user/domain/user"
+	"github.com/guiaramos/umarket/pkg/apperror"
 	"github.com/guiaramos/umarket/pkg/logger"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -30,10 +31,10 @@ func (r userRepository) NewId() string {
 }
 
 // InsertOne persist new user to mongodb
-func (r userRepository) InsertOne(ctx context.Context, u *user.User) error {
+func (r userRepository) InsertOne(ctx context.Context, u *user.User) *apperror.AppError {
 	result, err := r.coll.InsertOne(ctx, u)
 	if err != nil {
-		return err
+		return apperror.NewInternalServerError(err.Error())
 	}
 
 	r.logger.InfoWithFields("New user created with the following id: ", logger.LoggerFields{"id:": result.InsertedID})
@@ -42,17 +43,17 @@ func (r userRepository) InsertOne(ctx context.Context, u *user.User) error {
 }
 
 // UpdateOne saves current user changes to mongodb
-func (r userRepository) UpdateOne(ctx context.Context, u *user.User) error {
+func (r userRepository) UpdateOne(ctx context.Context, u *user.User) *apperror.AppError {
 	id, err := primitive.ObjectIDFromHex(u.ID)
 	if err != nil {
-		return err
+		return apperror.NewBadRequest(err.Error())
 	}
 
 	update := bson.D{{Key: "$set", Value: u}}
 
 	result, err := r.coll.UpdateByID(ctx, id, update)
 	if err != nil {
-		return err
+		return apperror.NewInternalServerError(err.Error())
 	}
 
 	r.logger.InfoWithFields("document(s) was/were updated.", logger.LoggerFields{
@@ -66,18 +67,18 @@ func (r userRepository) UpdateOne(ctx context.Context, u *user.User) error {
 }
 
 // FindOne searchs for one user from mongodb
-func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, error) {
+func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, *apperror.AppError) {
 	u := &user.User{}
 
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return u, err
+		return u, apperror.NewBadRequest(err.Error())
 	}
 
 	filter := bson.D{{Key: "_id", Value: objectID}}
 
 	if err = r.coll.FindOne(ctx, filter).Decode(u); err != nil {
-		return u, err
+		return u, apperror.NewInternalServerError(err.Error())
 	}
 
 	if u.ID != "" {
@@ -90,14 +91,14 @@ func (r userRepository) FindOne(ctx context.Context, id string) (*user.User, err
 }
 
 // FindByEmail searchs for user with passed email
-func (r userRepository) FindByEmail(ctx context.Context, email user.EmailAddress) (*user.User, error) {
+func (r userRepository) FindByEmail(ctx context.Context, email user.EmailAddress) (*user.User, *apperror.AppError) {
 	u := &user.User{}
 
 	filter := bson.D{{Key: "email", Value: email}}
 
 	err := r.coll.FindOne(ctx, filter).Decode(u)
 	if err != nil {
-		return u, err
+		return u, apperror.NewInternalServerError(err.Error())
 	}
 
 	if u.Email != "" {

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/guiaramos/umarket/pkg/apperror"
 	auth "github.com/guiaramos/umarket/pkg/auth"
 )
 
@@ -22,7 +23,7 @@ func NewSession(auth auth.Token) Session {
 }
 
 // Generate creates Access Token and assign token info to Session.
-func (s *Session) Generate(userId string, ttlMinutes time.Duration) (string, error) {
+func (s *Session) Generate(userId string, ttlMinutes time.Duration) (string, *apperror.AppError) {
 	// calculate the expire time
 	expTime := time.Now().Add(time.Minute * ttlMinutes)
 
@@ -36,7 +37,7 @@ func (s *Session) Generate(userId string, ttlMinutes time.Duration) (string, err
 }
 
 // GenerateFromToken verify and assign token info to Session.
-func (s *Session) GenerateFromToken(token string) error {
+func (s *Session) GenerateFromToken(token string) *apperror.AppError {
 	// Verify and Assign to Session
 	return s.auth.Verify(token, s)
 }

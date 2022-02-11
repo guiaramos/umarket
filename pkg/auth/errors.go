@@ -1,8 +1,10 @@
 package auth
 
-import "fmt"
+import (
+	"github.com/guiaramos/umarket/pkg/apperror"
+)
 
 var (
 	// ErrTokenInvalid is when given token is not valid.
-	ErrTokenInvalid = fmt.Errorf("token is not valid")
+	ErrTokenInvalid = apperror.NewUnauthorized("token is not valid")
 )
